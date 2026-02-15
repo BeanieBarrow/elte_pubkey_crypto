@@ -1,0 +1,144 @@
+\documentclass[11pt]{article}
+
+% ---------- Packages ----------
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+% ---------- Document ----------
+\begin{document}
+	
+	\begin{center}
+		\Large\textbf{Number Theory Cheat Sheet}\\[0.5em]
+		\normalsize Modular Arithmetic, Euler, Fermat, CRT, Diffie--Hellman
+	\end{center}
+	
+	\section*{Basic Definitions}
+	
+	For integers $a,b,n$ with $n>0$,
+	\[
+	a \equiv b \pmod{n} \iff n \mid (a-b).
+	\]
+	
+	The set $\mathbb{Z}_n^\ast$ denotes the integers modulo $n$ that are coprime to $n$.
+	
+	
+	\section*{Euler's Totient Function}
+	
+	The Euler totient function $\varphi(n)$ counts the integers
+	$1 \le k \le n$ such that $\gcd(k,n)=1$.
+	
+	\subsection*{Prime Power Formula}
+	
+	If $p$ is prime and $k \ge 1$, then
+	\[
+	\varphi(p^k) = p^k - p^{k-1} = p^k\left(1 - \frac{1}{p}\right).
+	\]
+	
+	\subsection*{Multiplicativity}
+	
+	If $\gcd(m,n)=1$, then
+	\[
+	\varphi(mn) = \varphi(m)\varphi(n).
+	\]
+	
+	Example:
+	\[
+	\varphi(100) = \varphi(4)\varphi(25) = 2 \cdot 20 = 40.
+	\]
+	
+	\section*{Euler's Theorem}
+	
+	If $\gcd(a,n)=1$, then
+	\[
+	a^{\varphi(n)} \equiv 1 \pmod{n}.
+	\]
+	
+	\subsection*{Exponent Reduction}
+	
+	\[
+	a^k \equiv a^{\,k \bmod \varphi(n)} \pmod{n},
+	\quad \text{when } \gcd(a,n)=1.
+	\]
+	
+	Used for computing last digits and last two digits.
+	
+	
+	\section*{Fermat's Little Theorem}
+	
+	If $p$ is prime and $\gcd(a,p)=1$, then
+	\[
+	a^{p-1} \equiv 1 \pmod{p}.
+	\]
+	
+	Equivalently,
+	\[
+	a^p \equiv a \pmod{p}.
+	\]
+	
+	\subsection*{Exponent Reduction}
+	
+	\[
+	a^k \equiv a^{\,k \bmod (p-1)} \pmod{p}.
+	\]
+	
+	
+	\section*{Chinese Remainder Theorem}
+	
+	Let $m,n$ be coprime.  
+	The system
+	\[
+	\begin{cases}
+		x \equiv a \pmod{m}, \\
+		x \equiv b \pmod{n}
+	\end{cases}
+	\]
+	has a unique solution modulo $mn$.
+	
+	\subsection*{Practical Use}
+	
+	If $N = m_1 m_2 \cdots m_r$ with pairwise coprime $m_i$, then
+	\[
+	x \pmod{N}
+	\]
+	is uniquely determined by
+	\[
+	x \pmod{m_1}, \; x \pmod{m_2}, \; \dots, \; x \pmod{m_r}.
+	\]
+	
+	
+	\section*{Fast Modular Exponentiation}
+	
+	To compute $a^k \bmod n$:
+	\begin{itemize}
+		\item Write $k$ in binary
+		\item Compute $a, a^2, a^4, a^8, \dots \bmod n$
+		\item Multiply the needed powers
+	\end{itemize}
+	
+	
+	\section*{Diffie--Hellman Key Exchange}
+	
+	Let $p$ be prime and $g \in \mathbb{Z}_p^\ast$.
+	
+	\begin{itemize}
+		\item Alice chooses secret $a$, sends $g^a \bmod p$
+		\item Bob chooses secret $b$, sends $g^b \bmod p$
+		\item Shared secret:
+		\[
+		s = g^{ab} \bmod p
+		\]
+	\end{itemize}
+	
+	Security relies on the discrete logarithm problem.
+	
+	
+	\section*{Last Digits Problems}
+	
+	\begin{itemize}
+		\item Last digit $\Rightarrow \bmod 10$
+		\item Last two digits $\Rightarrow \bmod 100$
+		\item Use Euler's theorem or CRT
+	\end{itemize}
+	
+\end{document}
