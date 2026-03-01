@@ -1,0 +1,270 @@
+\documentclass[11pt]{article}
+
+% --------------------------------------------------
+% Packages
+% --------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+
+% Pseudocode and algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Better fonts (optional)
+\usepackage{lmodern}
+
+% --------------------------------------------------
+% Hyperref setup
+% --------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% --------------------------------------------------
+% Theorem-like environments
+% --------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{claim}{Claim}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{recall}{Recall}[section]
+
+\theoremstyle{proof}
+% Proof environment is built-in via amsthm
+
+% --------------------------------------------------
+% Custom commands
+% --------------------------------------------------
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\negl}{\mathsf{negl}}
+
+% --------------------------------------------------
+% Document
+% --------------------------------------------------
+\begin{document}
+
+\title{Public Key Crypto notes - 03}
+\author{By contributors}
+\date{February 23. 2026}
+\maketitle
+
+% --------------------------------------------------
+\section{Public Key Encryption recap}
+% --------------------------------------------------
+
+\begin{definition}[Public key encryption scheme]
+	\item A Public Key Encryption (PKE) scheme is a triple $\Pi = (\Gen, \Enc, \Dec)$, where:
+	\begin{enumerate}
+		\item $Gen$: Input: security parameter $1^n$ (in other words, an $n$ length string of $1$s), output: $(pk, sk)$ (public key, secret key)
+		\item $Enc$: Input: $pk, m$, output: $c \leftarrow \Enc_{pk}(m)$, where $\leftarrow$ denotes that $\Enc$ is not necessarily deterministic
+		\item $Dec$: Input: $sk, c$, output: $m$ or $\bot$, where $\bot$ is an error indicating an invalid ciphertext
+	\end{enumerate}
+\end{definition}
+
+\section{Security of a Public Key Encrpytion scheme}
+
+\begin{itemize}
+	\item Model: The adversary $A$ is a PPT algorithm and $A$ knows all the public parameters (the $\Gen, \Enc, \Dec$ algorithms and the $pk$ public key)
+	\item The adversary $A$ eavesdrops ciphertext $c$
+	\item Goal of $A$ is to reveal \emph{any} information on message $m$
+	\item If this goal is accomplished by $A$, the scheme is considered broken
+\end{itemize}
+
+\begin{remark}
+	This is called the CPA (Chosen-Plaintext Attack) model.
+\end{remark}
+
+\begin{definition}[CPA experiment]
+	\leavevmode
+	\begin{enumerate}
+		\item Run the key generation algorithm $\Gen(1^n)$, obtaining the $(pk, sk)$ pair.
+		\item $A$ is given $pk$, and outputs $m_0, m_1$ messages.
+		\item Choose a random bit $b \in_R {0,1}$ and $c \leftarrow Enc_{pk}(m_b)$.
+		\item $A$ is given $c$, and outputs the guess $b'$.
+		\item If the guess $b' = b$, we say that $A$ has succeeded and $PubK^{cpa}_{A, \Pi}(n) = 1$, otherwise, $PubK^{cpa}_{A, \Pi}(n) = 0$
+	\end{enumerate}
+\end{definition}
+
+\begin{definition}[CPA-secure encryption scheme]
+	The $\Pi = (\Gen, \Enc, \Dec)$ public key encryption scheme is CPA-secure if:
+	$$
+	\Pr[PubK_{A, \Pi}^{cpa}(n) = 1] \le \frac{1}{2} + \negl(n)
+	$$
+\end{definition}
+
+\section{ElGamal encryption scheme}
+
+An "offline version" of the Diffie-Hellman key exchange protocol.
+
+\begin{definition}[ElGamal encryption scheme]
+	\leavevmode
+	\begin{itemize}
+		\item $\Gen$:
+		\begin{itemize}
+			\item Input: $1^n$
+			\item Output: Prime $p, q \in \mathbb{Z}_p, q$ (the order of $g$, which is typically a prime), $x, h = g^x$.
+			\item In a shorter way: $p, q, g, x, h=g^x$
+			\item $pk = (p, q, g, h)$
+			\item $sk = x$
+		\end{itemize}
+		\item $\Enc$:
+		\begin{itemize}
+			\item Input: $pk, m = {g^i, i=0, \dots, q-1} = <g>$ (alternate notation)
+			\item Output: $c = (g^y, m \cdot h^y)$, with $y \in_R \mathbb{Z}_q$ ($y$ is also referred to here as the \emph{session key})
+		\end{itemize}
+		\item $\Dec$:
+		\begin{itemize}
+			\item Input: $sk, c = (c_1, c_2)$
+			\item Output: $\frac{c_2}{c_1^x}$
+		\end{itemize}
+	\end{itemize}
+\end{definition}
+
+Correctness: $\frac{c_2}{c_1^x} = \frac{m \cdot h^y}{(g^y)^x} = m \cdot \frac{g^{xy}}{g^{xy}} = m$
+
+\begin{theorem}[CPA-security of the ElGamal public key encryption scheme]
+	If the Decisional Diffie-Hellman (DDH) problem is hard, then the ElGamal public key encryption scheme is CPA-secure.
+\end{theorem}
+
+\begin{recall}
+	DDH: Given $g^x, g^y, h_3$, decide whether $h_3 = g^{xy}$
+\end{recall}
+
+\begin{proof}
+	Our goal is to prove that $\forall PPT$ adversaries $A$:
+	$$
+	\Pr[PubK_{A, \Pi}(n) = 1] = \frac{1}{2} + \negl(n)
+	$$
+
+	Assume towards contraction that we have an adversary $A$. We define a distinguisher $D$ which tries to solve the DDH problem.
+	
+	We define a fake encryption scheme $\Pi'$:
+	\begin{itemize}
+		\item Input: $m, pk = (p, q, g, h)$
+		\item Output: $c = ()g^y, m \cdot g^z)$, with $y, z \in_R \mathbb{Z}_q$
+		\item There is no $\Dec$ algorithm defined
+	\end{itemize}
+	
+	We define a distinguisher $D$:
+	\begin{itemize}
+		\item Input: $h_1 = g^x, h_2 = g^ym h_3$
+		\item $D$ tries to determine whether $g^{xy} = h_3$
+		\item The algorithm is as follows:
+		\begin{enumerate}
+			\item Under $pk$, run $A$ to obtain two messages: $m_0, m_1$
+			\item Choose a random bit $b \in_R {0,1}$
+			\item Calculate $c_1 = h_2, c_2 = m_b \cdot h_3$
+			\item Give $(c_1, c_2)$ to $A$, obtain a guess $b'$
+		\end{enumerate}
+		\item Output:
+		$$
+		D =
+		\begin{cases}
+			1 & \text{if } b = b', \\
+			0 & \text{otherwise}.
+		\end{cases}
+		$$
+	\end{itemize}
+	
+	We analyse D as follows:
+	\begin{itemize}
+		\item Two cases:
+		\begin{enumerate}
+			\item If $h_3 = g^z, z \in_R \mathbb{Z}_q$, then $(c_1, c_2) = (g^y, m_b \cdot g^z)$, which means that this is the fake encryption scheme $\Pi'$
+			\begin{itemize}
+				\item $\Pr[D(g^x, g^y, g^z) = 1] = \Pr[PubK^{cpa}_{A,\Pi'}(n) = 1] = \frac{1}{2}$ as:
+				\item if $y, z$ are chosen randomly, no information can be extracted from $m \cdot g^z$, i.e. $m \cdot g^z$ is also a uniformly random element of $\textit{Z}_q$ and is independent from $m$.
+			\end{itemize}
+			\item If $h_3 = g^{xy}$, then $(c_1, c_2) = (g^y, m_b \cdot g^{xy})$, which means that it is the $\Pi$ ElGamal encryption scheme.
+			\begin{itemize}
+				\item $\Pr[D(g^x, g^y, g^{xy}) = 1] = \Pr[PubK_{A, \Pi}^{cpa}(n) = 1]$
+				\item We have to prove that this probability is close to $\frac{1}{2}$
+			\end{itemize}
+		\end{enumerate}
+	\end{itemize}
+	
+	Thus:
+	
+	\begin{align}
+		|\frac{1}{2} &- \Pr[PubK^{cpa}_{A, \Pi} = 1]| = \\
+		|\Pr[D(g^x, g^y, g^z) = 1] &- \Pr[D(g^x, g^y, g^{xy}) = 1] \le \negl(n)
+	\end{align}
+	
+	by the hardness assumption of DDH.
+	
+\end{proof}
+
+\section{RSA}
+
+Rivest-Shamir-Adleman
+
+\begin{definition}[Textbook RSA]
+	\leavevmode
+	\begin{itemize}
+		\item $\Gen$:
+		\begin{itemize}
+			\item Input: $1^n$
+			\item Output: $(N, e, d)$, where $e$ is the public key, and $d$ is the secret key
+			\item Output is generated as follows:
+			\begin{enumerate}
+				\item Choose two primes $p, q$ of bitsize $n$
+				\item $N = p \cdot q, \varphi(n) \text{(Euler's totient function)} = (p-1)(q-1)$
+				\item Choose $e$ such that $\gcd(e, \varphi(n)) = 1$
+				\item Compute $d \equiv e^{-1} \pmod{\varphi(N)}$, i.e. $d$ is the solution of $e \cdot x \equiv 1 \pmod{\varphi(N)}$
+				\item $pk = (N, e), sk = d$
+			\end{enumerate}
+		\end{itemize}
+		\item $\Enc$:
+		\begin{itemize}
+			\item Input: $pk = (N, e), m \in \mathbb{Z}_N^*$ (where $\mathbb{Z}_n^* = \{1 \le k \le N \cdot \gcd(k, N) = 1\}$)
+			\item Output: $c = m^e \pmod{N}$
+		\end{itemize}
+		\item $Dec$:
+		\begin{itemize}
+			\item Input: $sk = d, c$
+			\item Output: $c^d \pmod{N}$
+		\end{itemize}
+	\end{itemize}
+\end{definition}
+
+Correctness:
+
+\begin{itemize}
+	\item $c^d \equiv (m^e)^d \equiv m^{ed} \pmod{N} = m^{1+k \varphi(N)}$ (by the choice of $d$) $= m \cdot (m^{\varphi(N)})^k \equiv m \pmod{N}$
+	\item Where $m^{\varphi(N)} = 1$ by the Euler-Fermat theorem.
+\end{itemize}
+
+\begin{recall}[Euler-Fermat theorem]
+	\leavevmode
+	For any $N$ and $\gcd(a, N) = 1$:
+	$$
+	a^{\varphi(n)} \equiv 1 \pmod{N}
+	$$
+\end{recall}
+
+\begin{remark}
+	\leavevmode
+	\begin{itemize}
+		\item We need $\gcd(e, \varphi(N)) = 1$ to have a solution for $d$.
+		\item We required that $\gcd(m, N) = 1$, but usually, we relax this requirement, since:
+		$$
+		\Pr[\gcd(m, N) \ne 1] \text{(either $p|m$ or $q|m$)} = \frac{q+p}{N} \approx \frac{1}{p} \approx 2^n = \negl(n)
+		$$
+	\end{itemize}
+\end{remark}
+
+\end{document}
