@@ -1,0 +1,235 @@
+\documentclass[11pt]{article}
+
+% --------------------------------------------------
+% Packages
+% --------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+
+% Pseudocode and algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Better fonts (optional)
+\usepackage{lmodern}
+
+% --------------------------------------------------
+% Hyperref setup
+% --------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% --------------------------------------------------
+% Theorem-like environments
+% --------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{claim}{Claim}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{recall}{Recall}[section]
+
+\theoremstyle{proof}
+% Proof environment is built-in via amsthm
+
+% --------------------------------------------------
+% Custom commands
+% --------------------------------------------------
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Sig}{\mathsf{Sig}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\negl}{\mathsf{negl}}
+
+% --------------------------------------------------
+% Document
+% --------------------------------------------------
+\begin{document}
+
+\title{Public Key Crypto notes - 08}
+\author{By contributors}
+\date{March 30. 2026}
+\maketitle
+
+% --------------------------------------------------
+\section{Oblivious transfer recap}
+% --------------------------------------------------
+
+$A$ sends $m_0, m_1$, $B$ chooses $b \in_R \{0, 1\}$ and obtains $m_b$. RSA-based protocol.
+
+\section{Protocol 2 -- Bellari-Micali}
+
+\begin{itemize}
+	\item Diffie-Hellman-based, interactive protocol.
+	\item Let $p, g, q$ be as in ElGamal.
+	\item $A$ chooses $c \in_R <g>$, where $<g> = \{g^i: i = 0, \dots, q-1\}$ and sends $c$ to $B$.
+	\item $B$ chooses $k \in_R \mathbb{Z}_q, b \in_R \{0, 1\}, y_b = g^k, y_{1-b} = \frac{c}{g^k}$, and sends $y_0, y_1$ to $A$.
+	\item $A$ checks $y_0 \cdot y_1 \stackrel{?}{=} c$ and chooses two random exponents $r_0, r_1 \in_R \mathbb{Z}_q$
+	\begin{itemize}
+		\item $c_0 = (g^{r_0}, H(y_0^{r_0}) \oplus m_0)$
+		\item $c_1 = (g^{r_1}, H(y_1^{r_1}) \oplus m_1)$
+		\item $A$ sends $c_0, c_1$ to $B$
+	\end{itemize}
+	\item $B$ calculates $c_b = (v_0, v_1), m_b = H(v_0^k) \oplus v_1$
+\end{itemize}
+
+\section{Application of oblivious transfers}
+
+\begin{itemize}
+	\item Secure multiparty computations (MPC)
+	\begin{itemize}
+		\item There are two parties $A, B$. Both of them have a secret input $x_A, x_B$. There is a function $f(x, x')$. $A$ and $B$ want to evaluate $f(x_A, x_B)$ without them learning the other's secret.
+		\item Example: Dating protocol
+		\begin{itemize}
+			\item Two parties: $A, B$
+			\item Let $d_A = \begin{cases}
+				1 \text{ if } A \text{ wants to date with B} \\
+				0 \text{ otherwise}
+			\end{cases}$ and, $d_B = \begin{cases}
+			1 \text{ if } B \text{ wants to date with A} \\
+			0 \text{ otherwise}
+			\end{cases}$
+			\item The function to evaluate this: $\text{AND}(d_A, d_B)$
+		\end{itemize}
+		\item Evaluating AND with oblivious transfer:
+		\begin{itemize}
+			\item If $d_A = 1$, let $m_0 = 0$ (meaning that $B$ chose $0$), $m_1 = 1$
+			\item If $d_A = 0$, let $m_0 = 0, m_1 = 0$
+			\item Then, $A$ sends $m_0, m_1$ to $B$ by oblivious transfer
+		\end{itemize}
+	\end{itemize}
+\end{itemize}
+
+\section{Group signatures}
+
+\begin{itemize}
+	\item Group/organization
+	\item A Group Manager can add users to a group
+	\item The group $(S_0, S_1, \dots S_n)$ jointly issues signature $(m, \sigma)$ on behalf of the group itself
+	\item The exact individual who actually made the signature is masked
+	\item Requirements:
+	\begin{itemize}
+		\item $\sigma$ cannot be linked to any $S_i$
+		\item The Group Manager $M$ can resolved $\sigma$ (i.e. can learn the actual signer $S_i$)
+	\end{itemize}
+	\item Algorithms:
+	\begin{itemize}
+		\item Setup: $M$ sets the parameters up
+		\item Joining member $S_i$ is added by $M$ (can even happen dynamically)
+		\item Signing: $S_i$ signs $m$ and outputs $\sigma$
+		\item Verification: Third-party user $U$ verifies by $\Ver(m, \sigma)$
+		\item Open: $M$ links the signature $\sigma$ to $S_i$
+	\end{itemize}
+\end{itemize}
+
+\subsection{Examples of group signature protocols}
+
+\subsubsection{Chaum's group signature, '91}
+
+\begin{itemize}
+	\item Setup/Join:
+	\begin{itemize}
+		\item $S_i$ generates ElGamal keys: $pk_i = (p, g, q, g^{x_i}), sk_i = x_i$
+		\item $S_i$ gives $pk_i$ to $M$
+	\end{itemize}
+	\item Sign:
+	\begin{itemize}
+		\item At period $t$, $M$ chooses $r_{t,i} \in_R \mathbb{Z}_q$, and sends it to $S_i$
+		\item $M$ publishes $P_t = \{g^{r_{t,i} \cdot x_i}, i = 1, 2, \dots\}$ (all blinded public keys at period $t$)
+		\item $S_i$ uses $r_{t, i} \cdot x_i$ as a secret key for the ElGamal signature, $pk = g^{r_{t, i} \cdot x_i}$.
+	\end{itemize}
+	\item Verify:
+	\begin{itemize}
+		\item $U$ checks: $pk \stackrel{?}{\in} P_t$ and verifies the ElGamal signature.
+	\end{itemize}
+	\item Open:
+	\begin{itemize}
+		\item $M$ checks for which $i: pk = (g^{x_i})^{r_{t, i}}$
+	\end{itemize}
+\end{itemize}
+
+\begin{remark}
+	At period $t$, only \emph{one} signer can make a signature. Hence, the whole signature $(m, \sigma, P_t)$ is linear in the size of the group.
+\end{remark}
+
+Before protocol 2, we need preparation with proof of knowledge protocols.
+
+\section{Proof of knowledge protocols}
+
+\subsection{Schnorr's PoK protocol}
+
+\begin{itemize}
+	\item Schnorr $\text{PoK}[x: g^x = h](m)$	
+	\item Prover chooses $k \in_R \mathbb{Z}_q$, sends $I = g^k$ to the Verifier.
+	\item Verifier chooses $r \in_R \mathbb{Z}_q \text{ or } r = H(I) \text{ or } r = H(I || m)$, and sends $R$ to the Prover
+	\item Prover calculates $s = rx + k$, and sends $s$ to the Verifier
+	\item The Verifier checks whether $r \stackrel{?}{=} H(g^s \cdot h^{-r} || m)$, where $g^s \cdot h^{-r} = I$
+\end{itemize}
+
+
+\begin{remark}
+	Success probability without knowing $x$ is $\approx \frac{1}{q}$.
+\end{remark}
+
+\subsection{PoK of LogLog}
+
+Goal: Prover knows $x$ such that $y = g^{(a^x)}$ with given $g, y, a$.
+
+\begin{itemize}
+	\item Prover chooses $k \in_R \{0, \dots, 2^\lambda\}, t = g^{a^k}$ and $t$ is sent to the Verifier
+	\item The Verifier chooses $r \in_R \{0, 1\}$ and sends it to the Prover
+	\item The Prover calculates: $s = \begin{cases}
+		k, \text{ if } r = 0 \\
+		k-x, \text{ if } r = 1
+	\end{cases}$ and sends $s$ to the Verifier
+	\item Verifier performs the following: $t = \begin{cases}
+		g^{(a^s)}, \text{ if } r = 0 \\
+		y^{(a^s)}, \text{ if } r = 1
+	\end{cases}$
+	\item Correctness:
+	\begin{itemize}
+		\item $r = 0$ \checkmark
+		\item $r = 1 \rightarrow y^{(a^s)} = y^{(a^{k-x})} = [g^{(a^x)}]^{(a^{k-x})} = g^{(a^x) \cdot (a^k) \cdot (a^{-x})} = g^{(a^k)} = t$
+	\end{itemize}
+\end{itemize}
+
+\subsubsection{Remarks}
+
+\begin{remark}
+	If $r = 0$, the Verifier checks if $t$ has the right form. If $r = 1$, then the Verifier checks if $P$ knows $x$, provided $t$ has the right form.
+\end{remark}
+
+\begin{remark}
+	Success probability is $\frac{1}{2}$.
+\end{remark}
+
+\subsection{Non-interactive PoK protocol}
+
+PoK$[x: y = g^{(a^x)}](m = r, s_1, \dots, s_l) \in \{0, B^l \cdot \mathbb{Z}_q^l\}$ such that $r = H(m || y || g || a || t_1 || \dots || t_l)$ with $t_i = \begin{cases}
+	g^{(a^{s_i})}, \text{ if } r_i = 0 \\
+	y^{(a^{s_i})}, \text{ if } r_i = 1.
+\end{cases}$
+
+\noindent Construction:
+
+\begin{itemize}
+	\item $t_i = g^{(a^{k_i})}$ with random $k_i$ and $s_i = \begin{cases}
+		k_i, \text{ if } r_i = 0 \\
+		k_{i-x}, \text{ if } r_i = 1
+	\end{cases}$.
+\end{itemize}
+
+\end{document}

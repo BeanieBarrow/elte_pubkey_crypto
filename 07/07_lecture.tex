@@ -1,0 +1,273 @@
+\documentclass[11pt]{article}
+
+% --------------------------------------------------
+% Packages
+% --------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+
+% Pseudocode and algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Better fonts (optional)
+\usepackage{lmodern}
+
+% --------------------------------------------------
+% Hyperref setup
+% --------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% --------------------------------------------------
+% Theorem-like environments
+% --------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{claim}{Claim}[section]
+\newtheorem{remark}{Remark}[section]
+
+\theoremstyle{proof}
+% Proof environment is built-in via amsthm
+
+% --------------------------------------------------
+% Custom commands
+% --------------------------------------------------
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Sig}{\mathsf{Sig}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\negl}{\mathsf{negl}}
+
+% --------------------------------------------------
+% Document
+% --------------------------------------------------
+\begin{document}
+
+\title{Public Key Crypto notes - 07}
+\author{By contributors}
+\date{March 23. 2026}
+\maketitle
+
+% --------------------------------------------------
+\section{Schnorr-signature recap}
+% --------------------------------------------------
+
+\begin{itemize}
+	\item $\Gen$:
+	\begin{itemize}
+		\item Input: $1^n$
+		\item Output: $pk = (p, g, q, h = g^x), sk = x$
+	\end{itemize}
+	\item $\Sig$:
+	\begin{itemize}
+		\item Input: $sk, m$
+		\item Output: $(I, s)$, where:
+		\begin{align}
+			k &\in_R \mathbb{Z}_q, \\
+			I &= g^k, \\
+			r &= H(I, m), \\
+			s &= rx + k
+		\end{align}
+	\end{itemize}
+	\item $\Ver$:
+	\begin{itemize}
+		\item Input: $pk, m, (I, s)$
+		\item Output: Compute $r = H(I || m)$ and check whether $I = g^s \cdot h^{-r}$
+	\end{itemize}
+\end{itemize}
+
+This scheme is patented. Instead of this scheme, we mostly use DSA (made by NIST).
+
+\section{Digital Signature Algorithm (DSA)}
+
+\begin{itemize}
+	\item Designed by NIST.
+	\item Let $H: {0, 1}^* \rightarrow \mathbb{Z}_q, F: {0, 1}^* \rightarrow \mathbb{Z}_q$ be two functions. Consider the following three algorithms:
+	\item $\Gen$:
+	\begin{itemize}
+		\item Input: $1^n$
+		\item Output: Public key $pk = (p, g, q, h = g^x)$, Secret key: $sk = x$
+	\end{itemize}
+	\item $\Sig$:
+	\begin{itemize}
+		\item Input: $m, sk$
+		\item Output: $(r, s)$
+		\item $k \in_R \mathbb{Z}_q, r = F(g^k), s = k^{-1}(H(m) + xr) \pmod{q}$
+	\end{itemize}
+	\item $\Ver$:
+	\begin{itemize}
+		\item Input: $m, (r, s), pk$
+		\item Output: $r \stackrel{?}{=} F(g^{H(m) \cdot s^{-1}} \cdot h^{r \cdot s^{-1}})$
+	\end{itemize}
+	\item Correctness:
+	\begin{align}
+		g^{H(m) \cdot s^{-1}} \cdot h^{r \cdot s^{-1}} &= \\
+		g^{H(m) \cdot s^{-1} + x \cdot r \cdot s^{-1}} &= \\
+		g^{s^{-1}(H(m) + x \cdot h)} &= \\
+		g^{\frac{k}{H(m) + xr} \cdot (H(m) + xr)} &= g^k \\
+		F(g^k) \checkmark
+	\end{align}
+\end{itemize}
+
+\begin{theorem}[Security of the DSA scheme]
+	If $H$ and $F$ are modelled by a random oracle and the discrete logarithm problem is hard, then DSA is secure.
+\end{theorem}
+
+\begin{remark}
+	In practice, $F(x) = x \pmod q$, this means that the ”random oracle” is not really random.
+\end{remark}
+
+\begin{remark}
+	If the same $k$ is used multiple times, then one can obtain $sk = x$. It is important to use a different $k$ for each iteration.
+	
+	\noindent Indeed:
+	
+	\begin{align}
+		s_1 &= k^{-1} (H(m_1) + x + r) \\
+		s_2 &= k^{-1} (H(m_2) + x + r) \\
+		s_1 - s_2 &= k^{-1} (H(m_1) - H(m_2)) \rightarrow k \text{ can be computed}\\
+		\rightarrow x &\text{ can also be computed}.
+	\end{align}
+	
+	\noindent Note: Playstation 3: All $k$ used for updates were the same.\footnote{\url{https://deeprnd.medium.com/decoding-the-playstation-3-hack-unraveling-the-ecdsa-random-generator-flaw-e9074a51b831}}
+\end{remark}
+
+\subsection{Parameter selection}
+
+\begin{itemize}
+	\item $p$ is large, $\approx 3000-4000$ bits,
+	\item $q$ is medium size (size $\approx 256$ bits),
+	\item $\rightarrow$ signature size: $2 \times 256$ bits $\approx500$ bits.
+\end{itemize}
+
+\section{Further digital signatures using the discrete log problem}
+
+General form of signatures:
+
+\begin{itemize}
+	\item Given $a, b, c: ak = b + cx \pmod q$
+	\item Verification: $g^{ak} \stackrel{?}{=} g^b \cdot g^{xc}$
+	\item Examples:
+	\begin{enumerate}
+		\item Schnorr:
+		\begin{itemize}
+			\item $a = -1$
+			\item $b = s$
+			\item $c = -r$
+		\end{itemize}
+		\item DSA:
+		\begin{itemize}
+			\item $a = s$
+			\item $b = H(m)$
+			\item $c = (q^k \pmod{p}) \pmod{q}$
+		\end{itemize}
+		\item ElGamal:
+		\begin{itemize}
+			\item $a = s$
+			\item $b = h(m)$
+			\item $c = -r \pmod{p-1}$
+		\end{itemize}
+	\end{enumerate}
+\end{itemize}
+
+\section{Exotic protocols}
+
+\subsection{Blind signature}
+
+\begin{itemize}
+	\item Given: signer $S$ and user $U$.
+	\item $U$ has a message $m$ and wants $S$ to sign it without telling $m$ to $S$.
+\end{itemize}
+
+\subsection{Blind RSA signature}
+
+\begin{itemize}
+	\item The signer has plain RSA keys, where $pk = (N, e), sk = d$.
+	\item $U$ has message $m \in \mathbb{Z}_N^*$, blinding parameter $r \in_R \mathbb{Z}_N^*$, and sends $m' = m \cdot r^e \cdot N$ to $S$.
+	\item $S$ signs $m'$, and sends $s' = m'^d \pmod{N}$ to $U$.
+	\item So $s = s' \cdot r^{-1} \pmod{N} = m^d (r^e)^d r^{1} = m^d$
+\end{itemize}
+
+\begin{remark}
+	The value $r$ is the blinding parameter. If it is chosen randomly, then $m'$ cannot leak any information about $m$.
+\end{remark}
+
+\subsection{Blind Schnorr signature}
+
+\begin{itemize}
+	\item $S$ chooses $k \in_R \mathbb{Z}_q$, sends $I=g^k$ to $U$.
+	\item $U$ chooses blinding parameters $\alpha, \beta \in_R \mathbb{Z}_q$.
+	\item $U$ calculates:
+	\begin{align}
+		I' &= I \cdot g^\alpha \cdot h^\beta \\
+		r' &= H(I' || m) \\
+		r &= r' + \beta
+	\end{align}
+	and sends $r$ to $S$.
+	\item $S$ calculates $s = rx + k$ and sends it to $U$.
+	\item $U$ calculates $s' = s + \alpha$
+	\item The signature is $sig = (I', s')$
+\end{itemize}
+
+Correctness:
+
+\begin{align}
+	g^s &\stackrel{?}{=} I \cdot h^r = \\
+	g^{s'-\alpha} &\stackrel{?}{=} I' \cdot g^{-\alpha} \cdot h^{-\beta} \cdot g^{r' + \beta} = \\
+	g^{s'} &\stackrel{?}{=} I' \cdot h^{r'}
+\end{align}
+
+\subsection{Oblivious transfer}
+
+There are two parties: sender $A$ and receiver $B$. $A$ wants to send a message (out of two) to $B$, such that:
+
+\begin{itemize}
+	\item $B$ can only receive one of the messages.
+	\item $A$ should \emph{not} learn which message $B$ received.
+	\item Formally:
+	\begin{itemize}
+		\item Two messages: $m_0, m_1$
+		\item $B$ chooses $b \in_R {0, 1}$ and receives $m_b$
+	\end{itemize}
+\end{itemize}
+
+\subsubsection{Protocol 1 (Even, Goldreich, Lempel)}
+
+\begin{itemize}
+	\item Based on RSA.
+	\item $A$ has two messages: $m_0$, $m_1$ and generates RSA keys $pk = (N, e), sk = d$.
+	\item $A$ chooses $x_0, x_1 \in_R \mathbb{Z}_N^*$ and sends them to $B$ along with $pk$.
+	\item $B$ chooses $b \in_R {0, 1}$ and $k \in_R \mathbb{Z}_N^*$, and computes $v = (x_b + k^e) \pmod{N}$ and sends $v$ (also called a \emph{pre-envelope}) to $A$.
+	\item $A$ computes:
+	\begin{align}
+		k_0 &= (v - x_0)^d, \\
+		k_1 &= (v - x_1)^d, \\
+		m'_0 &= m_0 + k_0, \\
+		m'_1 &= m_1 + k_1, \\
+	\end{align}
+	and sends $m'_0, m'_1$ to $B$.
+	\item $B$ computes $m_b = m_b' - k$
+\end{itemize}
+
+But $B$ cannot compute $k_{1-b} = (v - x_{1-b})^d$
+
+\begin{remark}
+	This is a one-out-of-two oblivious transfer, but there are 1-out-of-n or m-out-of-n oblivious transfer schemes out there also.
+\end{remark}
+
+\end{document}
