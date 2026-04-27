@@ -1,0 +1,245 @@
+\documentclass[11pt]{article}
+
+% --------------------------------------------------
+% Packages
+% --------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, shapes}
+
+% Pseudocode and algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Better fonts (optional)
+\usepackage{lmodern}
+
+% --------------------------------------------------
+% Hyperref setup
+% --------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% --------------------------------------------------
+% Theorem-like environments
+% --------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{claim}{Claim}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{recall}{Recall}[section]
+
+\theoremstyle{proof}
+% Proof environment is built-in via amsthm
+
+% --------------------------------------------------
+% Custom commands
+% --------------------------------------------------
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Sig}{\mathsf{Sig}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\negl}{\mathsf{negl}}
+
+% --------------------------------------------------
+% Document
+% --------------------------------------------------
+\begin{document}
+
+\title{Public Key Crypto notes - 09}
+\author{By contributors}
+\date{April 13. 2026}
+\maketitle
+
+% --------------------------------------------------
+\section{PoK protocols we learnt about}
+% --------------------------------------------------
+
+\begin{recall}[Proof-of-knowledge protocols]\leavevmode
+	\begin{enumerate}
+		\item $\text{PoK}[x:g^x = h](m) \leftarrow$ Schnorr signature
+		\item $\text{PoK}[x: g^{a^x} = y](m)$, $g, a, y$ are public
+	\end{enumerate}
+\end{recall}
+
+\section{New PoK protocol - PoK RootLog}
+
+\begin{itemize}
+	\item Public parameters: $g, e, y$
+	\item Goal: Prover knows $x$ such that: $y = g^{(x^e)}$, where $ord(g) = N$ is an RSA modulus.
+	\item Two parties: $Prover(x)$ and $Verifier(g, N, e, y)$ who know all public parameters.
+	\begin{enumerate}
+		\item The Prover chooses $k \in_R {1, \dots, 2^\lambda}$, $t = g^{(k^e)}$, where $\lambda$ is a security parameter. The commitment $t$ is sent to the Verifier.
+		\item The Verifier chooses $r \in_R \{0, 1\}$ and sends it to the Prover.
+		\item The Prover checks: $s = \begin{cases}
+			k, \text{ if } r = 0 \\
+			\frac{k}{x}, \text{ if } r = 1
+		\end{cases}$, where $x$ is the to-be-proved value of the Prover, and sends $s$ to the Verifier.
+		\item The Verifier checks: $t \stackrel{?}{=} \begin{cases}
+			g^{(s^e)}, \text{ if } r = 0 \\
+			y^{(s^e)}, \text{ if } r = 1
+		\end{cases}$
+	\end{enumerate}
+	\item Correctness: $r = 0 \checkmark \\
+	r = 1: y^{(s^e)} = y^{(\frac{k}{x}^e)} = g^{(x^e) \cdot (\frac{k}{x})^e} = g^{(k^e)} = t$
+	\item Success probability: $\frac{1}{2}$, so to achieve negligible probability that the Prover succeeds with proving an incorrect value, we need to iterate the protocol several times.
+\end{itemize}
+
+\subsection{Non-interactive version}
+
+\begin{itemize}
+	\item For $i = 1, \dots$: $t_i = g^{(k_i)^e}$ with random $k_i$, $r = H(m || y || g || e || t_1 || t_2 || \dots)$
+	\item $s_i = \begin{cases}
+		k_i, \text{ if } r_i = 0 \\
+		\frac{k_i}{x}, \text{ if } r_i = 1
+	\end{cases}$, where $r = r_1 || r_2 || r_3 || \dots$.
+	\item PoK $x: y = g^{(x^e)}(m) = (r, s_1, s_2, \dots)$
+\end{itemize}
+
+\section{Group signatures continued}
+
+\begin{tikzpicture}[
+	>=Stealth,
+	node distance=2cm,
+	signer/.style={circle, draw, minimum size=8mm},
+	manager/.style={rectangle, draw, rounded corners, minimum width=2.5cm, minimum height=1cm},
+	output/.style={rectangle, draw, minimum width=3cm, minimum height=1cm},
+	group/.style={draw, ellipse, minimum width=6cm, minimum height=4cm}
+	]
+	
+	% Group G
+	\node[group] (G) {};
+	\node at (G.north) [yshift=4mm] {$G$};
+	
+	% Signers
+	\node[signer] (S1) at (-1.5,0.5) {$S_1$};
+	\node[signer] (S2) at (-0.5,-0.7) {$S_2$};
+	\node[signer] (S3) at (-2,-0.8) {$S_3$};
+	\node[signer] (Si) at (1.5,0.3) {$S_i$};
+	
+	\node at (0,-1.6) {$\ldots$};
+	
+	% Output (message, signature)
+	\node[output, right=3cm of Si] (out) {$(m,\sigma)$};
+	
+	% Arrow from signer to output
+	\draw[->] (Si) -- node[above] {sign} (out);
+	
+	% Manager
+	\node[manager, above=2cm of G] (M) {Manager $M$};
+	
+	% Manager actions
+	\draw[->, dashed] (M) -- node[left] {add} (G);
+	\draw[->, dashed] (M) -- node[right] {remove} (G);
+	
+\end{tikzpicture}
+
+\begin{itemize}
+	\item Setup:
+	\begin{itemize}
+		\item $M$ computes:
+		\begin{itemize}
+			\item $(N, c), (N, d)$ RSA keys
+			\item A prime $p$ and $g \in \mathbb{Z}_p^*$ such that $ord_p(g) = N$
+			\item $a \in \mathbb{Z}_N^*$ with large order
+			\item Public key: $(p, g, N, e, a)$, secret key: $d$
+		\end{itemize}
+	\end{itemize}
+	\item Join:
+	\begin{itemize}
+		\item $x_i$ random
+		\item $y_i = a^{x_i} \pmod{N}$
+		\item $z_i = g^{y_i}$, where $z_i$ is called the membership key
+		\item $(y_i, z_i)$ is sent to $M$ with PoK$[\alpha: a^\alpha = y_i]$
+		\item $M$ returns $v_i = (y_i + 1)^d$
+		\item $M$ stores $y_i$ in $\mathcal{Y}$
+	\end{itemize}
+	\item Sign:
+	\begin{itemize}
+		\item $S_i$ computes:
+		\begin{itemize}
+			\item $r \in_R \mathbb{Z}_N$
+			\item $\tilde{g} = g^r$ (blinded $g$)
+			\item $\tilde{z} = \tilde{g}^{y_i}$
+			\item $V_1 = \text{PoK}[\alpha: \tilde{z} = \tilde{g}^{a^\alpha}](m)$
+			\item $V_2 = \text{PoK}[\beta \cdot \tilde{z} \cdot \tilde{g} = \tilde{g}^{\beta^e}](m)$
+			\item Signature = $\tilde{g}, \tilde{z}, V_1, V_2$
+		\end{itemize}
+	\end{itemize}
+	\item Open:
+	\begin{itemize}
+		\item Given $(\tilde{g}, \tilde{z}, V_1, V_2)$
+		\item Let $\mathcal{Y}$ be the list of $y_i$ values
+		\item Then, check: $\tilde{g}^{y_i} \stackrel{?}{=} \tilde{z}$ for all $y_i \in \mathcal{Y}$
+	\end{itemize}
+	\item Correctness:
+	\begin{itemize}
+		\item By $V_1,$ $\tilde{g} \cdot \tilde{z}$ has the form $\tilde{g}^{y_i + 1}$
+		\item By $V_2$, $S_i$ knows $(y_i + 1)^d = V_i$
+	\end{itemize}
+\end{itemize}
+
+\section{Elliptic Curve Cryptography (ECC)}
+
+\subsection{Motivation}
+
+\begin{itemize}
+	\item Diffie-Hellman key exchange
+	\item Two users, $A, B$, they have secret keys $a, b$, and public keys $g^a, g^b \pmod{p}$
+	\item It is secure if the discrete log problem is hard
+	\item Having index calculus $p$ must have bit size 3000-4000 (almost one megabyte)
+	\item Using elliptic curves, we can have sufficiently secure key sizes of 200-500 bits
+\end{itemize}
+
+\begin{definition}[Elliptic curve]
+	An elliptic curve $E$ over $\mathbb{R}$ is a set of points:
+	$$
+	E = E_{A, B} = \{(x, y): y^2 = x^3 + Ax + B\} \cup \{\infty\}
+	$$
+	with $A, B \in \mathbb{R}$, such that $4A^3 + 27B^2 \ne 0$.
+\end{definition}
+
+TODO Case 1, bogyó a bal oldali cucc
+
+Case 2: Normális ell. curve
+
+\begin{remark}
+	$E$ is symmetric to the $x$-axis: $(x, y) \in E$ if and only if $(x, -y) \in E$.
+\end{remark}
+
+$f(x) = x^3 + Ax + B$ is cubic
+
+Case 1: 3 different zeros
+
+Case 2: 1 zero
+
+\begin{itemize}
+	\item $D(A, B) = 4A^3 + 27B^2$ is the discriminant of the cubic $f(x) = x^3 + Ax +b$
+	\item $f(x)$ has multiple zeros if $D(A, B) = 0$
+	\item Case 1: $D(A, B) = 0, f(x) = (x-x_0)^3$ TODO ábra
+	\item Case 2: $D(A, B) = 0, f(x) = (x-x_0)^2 (x-x_1)$
+\end{itemize}
+
+\subsection{Addition low of elliptic curves}
+
+\begin{itemize}
+	\item Let $P, Q \in E$, we define $P \oplus Q \in E$ (where $\oplus$ is the coordinate-wise addition) by the tangent-and-core method
+	\item TODO: ábra az összeadásról
+	\item If $P=Q \rightarrow P \oplus Q = 2P$
+	\item Point at infinity: basically the intersection of all vertical lines in the space. It is used when two points have the same $y$ coordinate. The line between these two points reaches the point of infinity. In this case: $P \oplus Q = \infty, P \oplus \infty = P$
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,226 @@
+\documentclass[11pt]{article}
+
+% --------------------------------------------------
+% Packages
+% --------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+
+% Pseudocode and algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Better fonts (optional)
+\usepackage{lmodern}
+
+% --------------------------------------------------
+% Hyperref setup
+% --------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% --------------------------------------------------
+% Theorem-like environments
+% --------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{claim}{Claim}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{recall}{Recall}[section]
+
+\theoremstyle{proof}
+% Proof environment is built-in via amsthm
+
+% --------------------------------------------------
+% Custom commands
+% --------------------------------------------------
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Sig}{\mathsf{Sig}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\negl}{\mathsf{negl}}
+
+% --------------------------------------------------
+% Document
+% --------------------------------------------------
+\begin{document}
+
+\title{Public Key Crypto notes - 11}
+\author{By contributors}
+\date{April 27. 2026}
+\maketitle
+
+\section{Projective coordinates}
+
+\begin{recall}
+	$\mathbb{R}^2$ is the two-dimensional affine plane. In this space, there are:
+	\begin{itemize}
+		\item Points,
+		\item Lines
+		\item $\mathbb{P}(\mathbb{R}^2)$ is the two-dimensional projective space, that contains:
+		\begin{itemize}
+			\item affine points,
+			\item affine lines,
+			\item a "projective" point: meeting points of parallel lines,
+			\item a "projective" line: line of all projective points.
+		\end{itemize}
+	\end{itemize}
+\end{recall}
+
+\begin{definition}[Projective points]
+	For $x1, y_1, z_1, x_2, y_2, z_2$, where $((x_i, y_i, z_i) \ne (0, 0, 0))$, we say $(x_1, y_1, z_1) \sim (x_2, y_2, z_2)$ if $x_2 = \lambda x_1, y_2 = \lambda y_1, z_2 = \lambda z_1$ for some $\lambda \ne 0$.
+	
+	This $\sim$ is an equivalence relation. Let $(x:y:z)$ be a representative of the equivalence classes of $(x, y, z)$.
+	
+	Example: $(1:1:1) = (2:2:2) = (3:3:3)$, but $(1:1:1) \ne (2:1:0)$.
+\end{definition}
+
+\begin{remark}
+	If $z \ne 0$, then $(x:y:z) = (\frac{x}{z}:\frac{y}{z}:1)$. These will be the affine points.
+	
+	If $z = 0$, then $(x:y:z) = (x:y:0)$. These will be the projective points.
+\end{remark}
+
+\begin{definition}[Homogenous polynomial]
+	A polynomial $F \in \mathbb{R}[x, y, z]$ of form $F = \Sigma_{c_{i,j,k}}x^i y^j z^k$ is \emph{homogenous} if $c_{i, 0, k} \ne 0$, then $i + j + k = d$ for some $d$. Here, $\deg F = d$.
+	
+	Examples: $F_1 = c_1 x + c_2 y + c_3$ is not homogenous, while $F_2 = c_1 x + c_2 y + c_3 z$ is $\deg = 1$ homogenous.
+\end{definition}
+
+\begin{remark}
+	If $F$ is homogenous and $(x_1:y_1:z_1) = (x_2:y_2:z_2)$, then $F(x_1,y_1,z_1) = 0 \iff F(x_2, y_2, z_2) = 0$.
+	
+	Indeed, if:
+	
+	\begin{align}
+		x_2 &= \lambda x_1, \qquad
+		y_2 = \lambda y_1, \qquad
+		z_2 = \lambda z_1. \\
+		\intertext{Then}
+		F(x_2,y_2,z_2)
+		&= F(\lambda x_1,\lambda y_1,\lambda z_1) \\
+		&= \sum_{i+j+k=d} c_{i,j,k} (\lambda x_1)^i (\lambda y_1)^j (\lambda z_1)^k \\
+		&= \lambda^d \sum_{i+j+k=d} c_{i,j,k} x_1^i y_1^j z_1^k \\
+		&= \lambda^d F(x_1,y_1,z_1).
+	\end{align}
+\end{remark}
+
+\begin{definition}
+	A line of the projective space is the zero-set of a $\deg = 1$ homogenic polynomial.
+	
+	Example 1: Take a horizontal line in $\mathbb{R}^2$. $y + c = 0 \rightarrow$ we can homogenize this: $y + cz = 0$.
+	
+	$(x:y:z)$ is a zero.
+	
+	\begin{itemize}
+		\item If $z = 1 \rightarrow$ affine point.
+		\item If $z = 0 \rightarrow y = 0 \rightarrow x \ne 0$.
+	\end{itemize}
+	
+	So $(x:0:0) = (1:0:0)$.
+	
+	Moreover, $(1:0:0) = (-1:0:0)$.
+	
+	Example 2: Take a vertical line $x + c = 0 \rightarrow$ make it homogenous $\rightarrow x + cz = 0 \rightarrow x + 0y + cz = 0$.
+	
+	\begin{itemize}
+		\item If $z = 1 \rightarrow$ affine points.
+		\item If $z = 0 \rightarrow x = 0 \rightarrow y \ne 0 \rightarrow (0:y:0) = (0:1:0)$.
+	\end{itemize}
+\end{definition}
+
+\subsection{Nice subsection title}
+
+Let $E:y^2 = x^3 + Ax + B$ and $F = x^3 + Ax + B - y^2$. Let's homogenize $F$:
+
+$H = x^3 + Axz^2 + Bz^3 - y^2z$
+
+The point of E:
+
+\begin{itemize}
+	\item If $z = 1 \rightarrow H(x, y, 1) = 0 \iff (x, y) \in E$.
+	\item If $z = 0 \rightarrow H(x, y, 0) = x^3 \rightarrow x = 0 \rightarrow y \ne 0$.
+\end{itemize}
+
+Thus, $(x:y:0) = (0:1:0)$ is the only fully projective point of $E$.
+
+\begin{remark}\leavevmode
+	\begin{itemize}
+		\item Similar addition low can be given, but we do not have to distinguish $P = \infty, P \ne \infty$.
+		\item In implementations, only projective coordinates are used.
+		\item It speeds up computations as modular inversions can be eliminated.
+	\end{itemize}
+\end{remark}
+
+\section{Elliptic curve cryptography}
+
+\begin{remark}
+	Let $P$ be a prime, and let $E$ be an elliptic curve over $\mathbb{Z}_p$. Then, the computation $n \rightarrow nP$ can be easily computed using the double-and-add algorithm (where $n$ is an integer, and $P \in E$).
+	
+	i.e. $n = \sum_{i=0}^{\lambda} b_i z^i, b_i \in \{0, 1\}$.
+	
+	$nP = 2(2((\dots (2b_iP)\dots) \oplus b_2P) \oplus b_1P) \oplus b_0P$.
+	
+	There are $\approx 2l = 2\log_2n$ many curve operations.
+	
+	But computing $n$ from $P, nP$ is hard. This is called the DLog problem on the curve.\footnote{Where previously, we had $g^n$ as the basis of security, we now have $nP$ for the same purpose.}
+\end{remark}
+
+Techniques for attack:
+
+\begin{enumerate}
+	\item Brute-force: trying all possible $n$ values. The possible values of $n \approx |E| \approx P$ (if $P$ is not trivial).
+	\item There are smarter algorithms (like baby-step-giant-step) having a running time of approximately $\sqrt{P}$.
+	\item Index calculus does \emph{not} work.
+\end{enumerate}
+
+Hence, to achieve the same security level AES-128, one needs $P$ to be approximately $2^{256}$ bit size. For RSA and ElGamal encryption, one needs $3000$ bits for the same security level.
+
+\subsection{Elliptic Curve Diffie-Hellman key exchange}
+
+Let $P$ be a prime and $E$ be an elliptic curve over $\mathbb{Z}_P, P \in E$ of order $l$ (i.e. $lP = \infty$, for $0 < k < l, kP + \infty$).
+
+As $E \stackrel{\sim}{=} \mathbb{Z}_N$ or $\mathbb{Z}_N \times \mathbb{Z}_M$, $E$ and $P$ can be chose such that $l \approx P$.
+
+\begin{enumerate}
+	\item Alice chooses $a \in_R \mathbb{Z}_l$ and sends it to Bob.
+	\item Bob chooses $b \in_R \mathbb{Z}_l$ and sends it to Alice.
+	\item $a(bP) = abP = b(aP)$.
+	\item The shared key is $x(abP)$
+\end{enumerate}
+
+\subsection{Elliptic Curve ElGamal encryption}
+
+\begin{itemize}
+	\item $\Gen$:
+	\begin{itemize}
+		\item Let $p$ be a prime and $E$ be an elliptic curve over $\mathbb{Z}_P, P \in E$ or order $l$.
+		\item $a \in_R \mathbb{Z}_l, Q = aP$.
+		\item $sk = a, pk = (p, E, P, Q)$.
+	\end{itemize}
+	\item $\Enc$:
+	\begin{itemize}
+		\item Given $pk = (p, E, P, Q)$ and let $M \in E$ be a message.
+		\item $c = (rP, M \oplus rQ)$ with $r \in_R \mathbb{Z}_l$.
+	\end{itemize}
+	\item $\Dec$:
+	\begin{itemize}
+		\item Given $sk = a$, and the ciphertext $c = (R, S)$, the message is $M = S \ominus aR$.
+	\end{itemize}
+\end{itemize}
+
+\end{document}
