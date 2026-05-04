@@ -1,0 +1,255 @@
+\documentclass[11pt]{article}
+
+% --------------------------------------------------
+% Packages
+% --------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+
+% Pseudocode and algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Better fonts (optional)
+\usepackage{lmodern}
+
+% --------------------------------------------------
+% Hyperref setup
+% --------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% --------------------------------------------------
+% Theorem-like environments
+% --------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{claim}{Claim}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{recall}{Recall}[section]
+
+\theoremstyle{proof}
+% Proof environment is built-in via amsthm
+
+% --------------------------------------------------
+% Custom commands
+% --------------------------------------------------
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Sig}{\mathsf{Sig}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\negl}{\mathsf{negl}}
+
+% --------------------------------------------------
+% Document
+% --------------------------------------------------
+\begin{document}
+
+\title{Public Key Crypto notes - 12}
+\author{By contributors}
+\date{May 04. 2026}
+\maketitle
+
+\section{Elliptic Curve ElGamal Signature Scheme}
+
+Let $p$ be a prime, $E$ be an elliptic curve over $\mathbb{Z}_p$, $P \in E$ of prime order $l$. Also, let $f: E \rightarrow \mathbb{Z}$ (typical choice: $f(x, y) = x$).
+
+\begin{itemize}
+	\item KeyGen:
+	\begin{itemize}
+		\item $sk = a \in_R \mathbb{Z}_l$, $pk = (p, E, P, l, a \cdot P = Q)$.
+	\end{itemize}
+	\item Sign:
+	\begin{itemize}
+		\item Let $m \in \mathbb{Z}_l$,
+		\item Choose $r \in_R \mathbb{Z}_l, R = rP \in E$,
+		\item Compute $s = k^{-1}(m - a \cdot f(R))$,
+		\item Signature: $(m, R, s)$
+	\end{itemize}
+	\item Verify:
+	\begin{itemize}
+		\item Let $pk = Q, sign = (m, R, S)$
+		\item $v_1 = sR + f(R) \cdot Q$
+		\item $v_2 = m \cdot P$
+		\item Verify: $v_1 \stackrel{?}{=} v_2$
+	\end{itemize}
+	\item Correctness:
+	\begin{align}
+		v_1 &= sR + f(R)Q = k^{-1}(m-af(R)) kP + f(R)aP =\\
+		&= mP-af(R)P+af(R)P = mP = v_2
+	\end{align}
+\end{itemize}
+
+\section{Elliptic Curve Digital Signature Algorithm (ECDSA)}
+
+\begin{itemize}
+	\item Standardized by NIST.
+	\item KeyGen:
+	\begin{itemize}
+		\item $sk = a \in_R \mathbb{Z}_l, pk = Q = aP \in E$
+	\end{itemize}
+	\item Sign:
+	\begin{itemize}
+		\item Let $m \in \mathbb{Z}_l$ be the message.
+		\item Choose $k \in_R \mathbb{Z}_l, R = kP \in E$.
+		\item Compute $s = k^{-1} (m + af(R))$
+		\item Signature: $(m, R, s)$
+	\end{itemize}
+	\item Verify:
+	\begin{itemize}
+		\item $u_1 = s^{-1} \cdot m \in \mathbb{Z}_l$
+		\item $u_2 = s^{-1} \cdot f(R) \in \mathbb{Z}_l$
+		\item $v = u_1 P + u_2 Q$
+	\end{itemize}
+	\item Correctness:
+	\begin{align}
+		v &= u_1 P + u_2 Q \\
+		&= s^{-1} \cdot mP + s^{-1} \cdot f(R)a \cdot P \\
+		&= (s^{-1} \cdot m + s^{-1} \cdot f(R)a) P \\
+		&= k (m + af(R))^{-1} (m + a f(R)) \cdot P \\
+		&= kP = R
+	\end{align}
+\end{itemize}
+
+\begin{remark}[Computational costs of Verify]
+	\leavevmode
+
+	EC ElGamal: 3 scalar multiplications, 1 addition.
+	
+	ECDSA: 2 scalar multiplications, 1 addition on $E$.
+	
+	ECDSA is much faster.
+\end{remark}
+
+\begin{remark}
+	One can consider elliptic curves over finite field $\mathbb{F}_q$ ($q$ is a prime power) instead of $\mathbb{Z}_p$.
+	
+	However, if $q = 2^n$ or $q = 3^n$, we need a different curve equation.
+\end{remark}
+
+\section{Pairing-based crypto}
+
+Let $E$ be an elliptic curve over $\mathbb{Z}_p$, and for $n | |E|$, let $E[n] = \{P \in E, nP = \infty\}$.
+
+If $n$ is large enough, then $E[n]$ can be almost as large as $E$, e.g. $|E| = l$ is a prime $E[l] = E$.
+
+\begin{definition}[Pairing]
+	A pairing is a map $e: E[n] \times E[n] \rightarrow \mathbb{Z}_p$ with:
+	
+	\begin{enumerate}
+		\item $e$ is bilinear. $e(aP, Q) = e(P, aQ) = e(P, Q)^a$
+		\item $e$ is non-trivial. If $e(P, Q) = 1$ for all $Q$ or $e(Q, P) = P$ for all $Q \rightarrow P = \infty$ 
+	\end{enumerate}
+\end{definition}
+
+\begin{remark}
+	For appropriate choice of parameters (e.g. $n | p-1$), there are curves $E$ over $\mathbb{Z}_p$ such that a pairing exists.
+\end{remark}
+
+Having pairing, one can perform cryptographic attacks.
+
+\begin{enumerate}
+	\item If there is a pairing, then the Decisional Diffie-Hellman problem is easy.
+	\begin{itemize}
+		\item Given $aP, bP, Q \rightarrow$ decide whether $abP \stackrel{?}{=}Q$
+		\item Idea: $e(aP, bP) = e(P, abP) \stackrel{?}{=} e(P, Q)$
+	\end{itemize}
+	\item If one can solve DLog in $\mathbb{Z}_p$, then they can do it on $E$ too.
+	\begin{itemize}
+		\item Given $P, aP = Q \rightarrow a = ?$
+		\item Idea: $e(P, Q) = e(P, aP) = e(P, P)^a$. If $g = e(P, P) \in \mathbb{Z}_p$ given $e(P, Q) = g^a \in \mathbb{Z}_p$.
+		\item So $p$ has to be the same size as in classical (not elliptic curve) crypto, i.e. $p \approx 3000-4000$ bits.
+	\end{itemize}
+\end{enumerate}
+
+\subsection{Protocol 1}
+
+3-party Diffie-Hellman key exchange protocol.
+
+\begin{itemize}
+	\item Person $A$: $a \in_R \mathbb{Z}_n$, sends $s_AP$.
+	\item Person $B$: $b \in_R \mathbb{Z}_n$, sends $s_BP$.
+	\item Person $C$: $c \in_R \mathbb{Z}_n$, sends $s_CP$.
+	\item Then $e(bP, cP)^a = e(aP, cP)^b, e(aP, bP)^c = e(P, P)^{abc}$.
+\end{itemize}
+
+\subsection{Protocol 2 - Identity-based encryption}
+
+Goal: Design a PKE such that the public key is an identifier (ID).
+
+\begin{definition}[Boneh-Franklin IBE]
+	\begin{itemize}
+		\item $A, B$ users
+		\item TA: Trusted Authority
+		\item Protocols:
+		\begin{itemize}
+			\item Setup,
+			\item Extraction,
+			\item Encryption,
+			\item Decryption
+		\end{itemize}
+		\item Setup:
+		\begin{itemize}
+			\item TA chooses:
+			\begin{itemize}
+				\item Primes $p, l$, an elliptic curve $E$ over $\mathbb{Z}_p$ such that $\exists e: E[n] \times E[n] \rightarrow \mathbb{Z}_p$ and a point $P \in E[n]$ of order $l$.
+				\item $H: \{0, 1\}^* \rightarrow P \in E[l]$
+				\item $s \in_R \mathbb{Z}_l, P_{pub} = sP$, where $s$ is secret, $P_{pub}$ is public.
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+\end{definition}
+
+Extraction:
+
+\begin{itemize}
+	\item Let Bob's ID be $ID_B$.
+	\item TA computes: $Q_B = H(ID_B), D_B = sQ_B$.
+	\item Bob's $sk = D_B$
+\end{itemize}
+
+Encryption:
+
+\begin{itemize}
+	\item Let $ID_B$ be the ID of Bob.
+	\item $A$ computes: $Q_B = H(ID_B), g_B = e(Q_B, P_{pub})$
+	\item $r \in_R \mathbb{Z}_l$, cipher text: $c = (rP \in E, m \cdot g_B^r \in \mathbb{Z}_l)$ on message $m$.
+\end{itemize}
+
+Decryption:
+
+\begin{itemize}
+	\item $B$ is given $c = (U, v)$ having $D_B: h_B = e(D_B, U)$
+	\item $m = \frac{v}{h_B}$
+\end{itemize}
+
+Correctness: 
+
+\begin{align}
+	h_B &= e(D_B, U) = \\
+	&= e(sQ_B, rP) = \\
+	&= r(Q_B, sP)^r = \\
+	&= g_B^r
+\end{align}
+
+And:
+
+$$
+\frac{v}{h_B} = \frac{m \cdot g_B^r}{g_B^r} = m
+$$
+
+\end{document}
