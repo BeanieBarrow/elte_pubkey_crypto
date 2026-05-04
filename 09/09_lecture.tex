@@ -41,9 +41,6 @@
 \newtheorem{remark}{Remark}[section]
 \newtheorem{recall}{Recall}[section]
 
-\theoremstyle{proof}
-% Proof environment is built-in via amsthm
-
 % --------------------------------------------------
 % Custom commands
 % --------------------------------------------------
@@ -212,9 +209,49 @@
 	with $A, B \in \mathbb{R}$, such that $4A^3 + 27B^2 \ne 0$.
 \end{definition}
 
-TODO Case 1, bogyó a bal oldali cucc
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.0]
+		% Axes
+		\draw[->] (-3,0) -- (4,0) node[right] {$x$};
+		\draw[->] (0,-3) -- (0,3) node[above] {$y$};
+		
+		% Shift amount
+		\def\xzero{1.0}
+		
+		% Curve: y^2 = (x-x0)^3, parametrized by (x0+t^2, t^3)
+		\draw[thick, blue, domain=-1.4:1.4, samples=200, smooth]
+		plot ({\xzero + \x*\x}, {\x*\x*\x});
+		
+		% Singular point
+		\filldraw[red] (\xzero,0) circle (2pt) node[below] {$x_0$};
+		
+		\node[blue] at (2.5,2.1) {$y^2=(x-x_0)^3$};
+	\end{tikzpicture}
+	\caption{Singular cubic with a triple root translated to $x=x_0$.}
+\end{figure}
 
-Case 2: Normális ell. curve
+Case 2: Normal elliptic curve
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.0]
+		% Axes
+		\draw[->] (-2.4,0) -- (2.8,0) node[right] {$x$};
+		\draw[->] (0,-2.8) -- (0,2.8) node[above] {$y$};
+		
+		% Elliptic curve y^2 = x^3 - x + 1
+		% Use a slightly safer left endpoint to avoid sqrt of a negative number
+		\draw[thick, blue, domain=-1.324:2.0, samples=300, smooth]
+		plot (\x, {sqrt(\x*\x*\x - \x + 1)});
+		\draw[thick, blue, domain=-1.324:2.0, samples=300, smooth]
+		plot (\x, {-sqrt(\x*\x*\x - \x + 1)});
+		
+		% Label
+		\node[blue] at (1.45,2.15) {$y^2 = x^3 - x + 1$};
+	\end{tikzpicture}
+	\caption{A normal (nonsingular) elliptic curve over $\mathbb{R}$.}
+\end{figure}
 
 \begin{remark}
 	$E$ is symmetric to the $x$-axis: $(x, y) \in E$ if and only if $(x, -y) \in E$.
@@ -229,17 +266,117 @@ Case 2: 1 zero
 \begin{itemize}
 	\item $D(A, B) = 4A^3 + 27B^2$ is the discriminant of the cubic $f(x) = x^3 + Ax +b$
 	\item $f(x)$ has multiple zeros if $D(A, B) = 0$
-	\item Case 1: $D(A, B) = 0, f(x) = (x-x_0)^3$ TODO ábra
+	\item Case 1: $D(A, B) = 0, f(x) = (x-x_0)^3$
 	\item Case 2: $D(A, B) = 0, f(x) = (x-x_0)^2 (x-x_1)$
 \end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.0]
+		% Axes
+		\draw[->] (-3,0) -- (3,0) node[right] {$x$};
+		\draw[->] (0,-3) -- (0,3) node[above] {$y$};
+		
+		% Nodal cubic: y^2 = x^2(x+1)
+		% Parametrize upper/lower branches as y = ±sqrt(x^2(x+1)), for x >= -1
+		\draw[thick, blue, domain=-1:2.2, samples=200, smooth]
+		plot (\x, {sqrt((\x*\x)*(\x+1))});
+		\draw[thick, blue, domain=-1:2.2, samples=200, smooth]
+		plot (\x, {-sqrt((\x*\x)*(\x+1))});
+		
+		% Singular point
+		\filldraw[red] (0,0) circle (2pt) node[below right] {node};
+		
+		% Labels
+		\node[blue] at (1.4,2.2) {$y^2=x^2(x+1)$};
+	\end{tikzpicture}
+	\caption{Singular cubic with a double root: a node.}
+\end{figure}
 
 \subsection{Addition low of elliptic curves}
 
 \begin{itemize}
 	\item Let $P, Q \in E$, we define $P \oplus Q \in E$ (where $\oplus$ is the coordinate-wise addition) by the tangent-and-core method
-	\item TODO: ábra az összeadásról
 	\item If $P=Q \rightarrow P \oplus Q = 2P$
 	\item Point at infinity: basically the intersection of all vertical lines in the space. It is used when two points have the same $y$ coordinate. The line between these two points reaches the point of infinity. In this case: $P \oplus Q = \infty, P \oplus \infty = P$
 \end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.2]
+		% Axes
+		\draw[->] (-2.2,0) -- (2.4,0) node[right] {$x$};
+		\draw[->] (0,-2.2) -- (0,2.4) node[above] {$y$};
+		
+		% Elliptic curve y^2 = x^3 - x + 1
+		\draw[thick, blue, domain=-1.324:1.85, samples=300, smooth]
+		plot (\x, {sqrt(\x*\x*\x - \x + 1)});
+		\draw[thick, blue, domain=-1.324:1.85, samples=300, smooth]
+		plot (\x, {-sqrt(\x*\x*\x - \x + 1)});
+		
+		% Exact points on the curve
+		\coordinate (P) at (-1,1);
+		\coordinate (Q) at (0,1);
+		\coordinate (Rthird) at (1,1);   % third intersection of secant with curve
+		\coordinate (Sum) at (1,-1);     % P+Q = reflection of Rthird
+		
+		% Secant line through P and Q: y = 1
+		\draw[red, thick] (-1.15,1) -- (1.15,1);
+		
+		% Reflection line
+		\draw[dashed, gray] (1,-1) -- (1,1);
+		
+		% Points
+		\filldraw[black] (P) circle (2pt) node[above left] {$P$};
+		\filldraw[black] (Q) circle (2pt) node[above] {$Q$};
+		\filldraw[black] (Rthird) circle (2pt) node[above right] {$R'$};
+		\filldraw[black] (Sum) circle (2pt) node[below right] {$P+Q$};
+		
+		% Optional note
+		\node[red] at (0.45,1.18) {};
+	\end{tikzpicture}
+	\caption{Geometric addition on the elliptic curve $y^2=x^3-x+1$: the line through $P$ and $Q$ meets the curve again at $R'$, and $P+Q$ is the reflection of $R'$ across the $x$-axis.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=0.75]
+		% Axes
+		\draw[->] (-2.8,0) -- (5.2,0) node[right] {$x$};
+		\draw[->] (0,-5.6) -- (0,5.8) node[above] {$y$};
+		
+		% Light grid (to resemble the sample)
+		\draw[gray!20, step=1] (-2.5,-5.5) grid (5,5.5);
+		
+		% Elliptic curve: y^2 = x^3 - x + 1
+		\draw[thick, black, domain=-1.324:5, samples=400, smooth]
+		plot (\x, {sqrt(\x*\x*\x - \x + 1)});
+		\draw[thick, black, domain=-1.324:5, samples=400, smooth]
+		plot (\x, {-sqrt(\x*\x*\x - \x + 1)});
+		
+		% Exact points
+		\coordinate (P) at (-1,1);
+		\coordinate (R) at (3,5);
+		\coordinate (D) at (3,-5);
+		
+		% Tangent line at P: y = x + 2
+		\draw[red!60!brown, thin] (-2.5,-0.5) -- (5,7);
+		
+		% Vertical reflection line through x=3
+		\draw[red!60!brown, thin] (3,-5.4) -- (3,5.4);
+		
+		% Points
+		\filldraw[red] (P) circle (3pt);
+		\filldraw[yellow!80!black] (R) circle (3pt);
+		\filldraw[yellow!80!black] (D) circle (3pt);
+		
+		% Labels
+		\node[below left] at (P) {$P$};
+		\node[above left] at (P) {\color{green!60!black}\Large $x,y$};
+		
+		\node[right] at (D) {\Large $2P$};
+	\end{tikzpicture}
+	\caption{Point doubling on the elliptic curve $y^2=x^3-x+1$: the tangent at $P=(-1,1)$ meets the curve again at $R=(3,5)$, and $2P=(3,-5)$ is the reflection of $R$ across the $x$-axis.}
+\end{figure}
 
 \end{document}
