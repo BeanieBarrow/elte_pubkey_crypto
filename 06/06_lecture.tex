@@ -68,7 +68,7 @@
 \begin{itemize}
 	\item Goal: Design a signature scheme that utilises the discrete log problem.
 	\item Idea: Digital signature: Proof of knowledge of secret key without telling any information about it.
-	\item Example: Ali Baba's cave: Bob can only pass meet Alice from $A$ when entering from $B$ if he knows the password. Alice does not hear the password.
+	\item Example: Ali Baba's cave: Bob can only meet Alice from $A$ when entering from $B$ if he knows the password. Alice does not hear the password.
 	\item The probability of passing is 50\%. If Bob passes the test two times, 25\%, etc.
 	\item Given $n$ tests, Bob can pass the test by randomly guessing with $\frac{1}{2^n}$ probability.
 	\item This is a proof to the validator, Alice. For outside observers, no one can tell whether Bob really knows the password.
@@ -114,7 +114,7 @@ Let $pk = (p, g, q, h=g^x), sk = x$.
 	\begin{align}
 		s_1 &= r_1x + k \\
 		s_2 &= r_2x + k \\
-		s_1 - s_2 &= (r_1 - r_2)x \\
+		s_1 - s_2 &= (r_1 - r_2)x
 	\end{align}
 	
 	So:
@@ -140,7 +140,7 @@ Replace the challenge $r$ with $r = H(I)$, where $H$ is a secure cryptographic h
 \noindent To prove security, we use the Random Oracle Model (ROM), where $H(.)$ is replaced by a random oracle.
 
 \begin{definition}[Random Oracle Model (ROM)]
-	For a given input $x$, if it has not been queried, then let $r \in_R \mathbb{Z}_q$, and put $r = \mathcal{O}(x)$, where $\mathcal{O}$ is the random oracle. If it has been queried, return the same output.
+	For a given input $x$, if it has not yet been queried, then let $r \in_R \mathbb{Z}_q$, and put $r = \mathcal{O}(x)$, where $\mathcal{O}$ is the random oracle. If it has been queried, return the same output.
 \end{definition}
 
 \subsection{Schnorr signature scheme}

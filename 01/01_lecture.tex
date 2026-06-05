@@ -92,7 +92,7 @@
 			\item $d$ - Decryption key, which is private, kept in secret
 		\end{itemize}
 		\item $c = Enc_e(m)$
-		\item $m = Enc_d(c)$
+		\item $m = Dec_d(c)$
 	\end{itemize}
 	
 	\subsection{Properties of PKC}
@@ -330,9 +330,9 @@
 	\begin{proof}
 		Let $\sigma = ord_p (g)$
 		\begin{align}
-			p-1 = \sigma \cdot q + r && 0 \le r \le \sigma \\
-			1 = g^{p-1} = g^{\sigma \cdot q + r} = && \text{(by Fermat's little theorem)} \\
-			= (g^{\sigma})^q \cdot g^r && \text{(where $g^\sigma$ comes from the definition of the order of $g$)}
+			p-1 = \sigma \cdot g + r && 0 \le r \le \sigma \\
+			1 = g^{p-1} = g^{\sigma \cdot g + r} = && \text{(by Fermat's little theorem)} \\
+			= (g^{\sigma})^g \cdot g^r && \text{(where $g^\sigma$ comes from the definition of the order of $g$)}
 		\end{align}
 		i.e.: $1=g^r$ by the minimality of the $ord$, $r=0$
 	\end{proof}

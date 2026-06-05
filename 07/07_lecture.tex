@@ -97,7 +97,7 @@ This scheme is patented. Instead of this scheme, we mostly use DSA (made by NIST
 
 \begin{itemize}
 	\item Designed by NIST.
-	\item Let $H: {0, 1}^* \rightarrow \mathbb{Z}_q, F: {0, 1}^* \rightarrow \mathbb{Z}_q$ be two functions. Consider the following three algorithms:
+	\item Let $H: \{0, 1\}^* \rightarrow \mathbb{Z}_q, F: \{0, 1\}^* \rightarrow \mathbb{Z}_q$ be two functions. Consider the following three algorithms:
 	\item $\Gen$:
 	\begin{itemize}
 		\item Input: $1^n$
@@ -174,7 +174,7 @@ General form of signatures:
 		\begin{itemize}
 			\item $a = s$
 			\item $b = H(m)$
-			\item $c = (q^k \pmod{p}) \pmod{q}$
+			\item $c = (g^k \pmod{p}) \pmod{q}$
 		\end{itemize}
 		\item ElGamal:
 		\begin{itemize}
@@ -198,7 +198,7 @@ General form of signatures:
 
 \begin{itemize}
 	\item The signer has plain RSA keys, where $pk = (N, e), sk = d$.
-	\item $U$ has message $m \in \mathbb{Z}_N^*$, blinding parameter $r \in_R \mathbb{Z}_N^*$, and sends $m' = m \cdot r^e \cdot N$ to $S$.
+	\item $U$ has message $m \in \mathbb{Z}_N^*$, blinding parameter $r \in_R \mathbb{Z}_N^*$, and sends $m' = m \cdot r^e \pmod{N}$ to $S$.
 	\item $S$ signs $m'$, and sends $s' = m'^d \pmod{N}$ to $U$.
 	\item So $s = s' \cdot r^{-1} \pmod{N} = m^d (r^e)^d r^{1} = m^d$
 \end{itemize}
@@ -242,7 +242,7 @@ There are two parties: sender $A$ and receiver $B$. $A$ wants to send a message 
 	\item Formally:
 	\begin{itemize}
 		\item Two messages: $m_0, m_1$
-		\item $B$ chooses $b \in_R {0, 1}$ and receives $m_b$
+		\item $B$ chooses $b \in_R \{0, 1\}$ and receives $m_b$
 	\end{itemize}
 \end{itemize}
 
@@ -252,7 +252,7 @@ There are two parties: sender $A$ and receiver $B$. $A$ wants to send a message 
 	\item Based on RSA.
 	\item $A$ has two messages: $m_0$, $m_1$ and generates RSA keys $pk = (N, e), sk = d$.
 	\item $A$ chooses $x_0, x_1 \in_R \mathbb{Z}_N^*$ and sends them to $B$ along with $pk$.
-	\item $B$ chooses $b \in_R {0, 1}$ and $k \in_R \mathbb{Z}_N^*$, and computes $v = (x_b + k^e) \pmod{N}$ and sends $v$ (also called a \emph{pre-envelope}) to $A$.
+	\item $B$ chooses $b \in_R \{0, 1\}$ and $k \in_R \mathbb{Z}_N^*$, and computes $v = (x_b + k^e) \pmod{N}$ and sends $v$ (also called a \emph{pre-envelope}) to $A$.
 	\item $A$ computes:
 	\begin{align}
 		k_0 &= (v - x_0)^d, \\

@@ -82,7 +82,7 @@
 \end{recall}
 
 \begin{definition}[Projective points]
-	For $x1, y_1, z_1, x_2, y_2, z_2$, where $((x_i, y_i, z_i) \ne (0, 0, 0))$, we say $(x_1, y_1, z_1) \sim (x_2, y_2, z_2)$ if $x_2 = \lambda x_1, y_2 = \lambda y_1, z_2 = \lambda z_1$ for some $\lambda \ne 0$.
+	For $x_1, y_1, z_1, x_2, y_2, z_2$, where $((x_i, y_i, z_i) \ne (0, 0, 0))$, we say $(x_1, y_1, z_1) \sim (x_2, y_2, z_2)$ if $x_2 = \lambda x_1, y_2 = \lambda y_1, z_2 = \lambda z_1$ for some $\lambda \ne 0$.
 	
 	This $\sim$ is an equivalence relation. Let $(x:y:z)$ be a representative of the equivalence classes of $(x, y, z)$.
 	
@@ -143,7 +143,7 @@
 	\end{itemize}
 \end{definition}
 
-\subsection{Nice subsection title}
+\subsection{Homogenizing}
 
 Let $E:y^2 = x^3 + Ax + B$ and $F = x^3 + Ax + B - y^2$. Let's homogenize $F$:
 
@@ -160,7 +160,7 @@ Thus, $(x:y:0) = (0:1:0)$ is the only fully projective point of $E$.
 
 \begin{remark}\leavevmode
 	\begin{itemize}
-		\item Similar addition low can be given, but we do not have to distinguish $P = \infty, P \ne \infty$.
+		\item A similar addition law can be given, but we do not have to distinguish $P = \infty, P \ne \infty$.
 		\item In implementations, only projective coordinates are used.
 		\item It speeds up computations as modular inversions can be eliminated.
 	\end{itemize}
@@ -194,13 +194,13 @@ Hence, to achieve the same security level AES-128, one needs $P$ to be approxima
 
 Let $P$ be a prime and $E$ be an elliptic curve over $\mathbb{Z}_P, P \in E$ of order $l$ (i.e. $lP = \infty$, for $0 < k < l, kP + \infty$).
 
-As $E \stackrel{\sim}{=} \mathbb{Z}_N$ or $\mathbb{Z}_N \times \mathbb{Z}_M$, $E$ and $P$ can be chose such that $l \approx P$.
+As $E \stackrel{\sim}{=} \mathbb{Z}_N$ or $\mathbb{Z}_N \times \mathbb{Z}_M$, $E$ and $P$ can be chosen such that $l \approx P$.
 
 \begin{enumerate}
 	\item Alice chooses $a \in_R \mathbb{Z}_l$ and sends it to Bob.
 	\item Bob chooses $b \in_R \mathbb{Z}_l$ and sends it to Alice.
 	\item $a(bP) = abP = b(aP)$.
-	\item The shared key is $x(abP)$
+	\item The shared key is $x = abP$
 \end{enumerate}
 
 \subsection{Elliptic Curve ElGamal encryption}
@@ -208,7 +208,7 @@ As $E \stackrel{\sim}{=} \mathbb{Z}_N$ or $\mathbb{Z}_N \times \mathbb{Z}_M$, $E
 \begin{itemize}
 	\item $\Gen$:
 	\begin{itemize}
-		\item Let $p$ be a prime and $E$ be an elliptic curve over $\mathbb{Z}_P, P \in E$ or order $l$.
+		\item Let $p$ be a prime and $E$ be an elliptic curve over $\mathbb{Z}_P, P \in E$ of order $l$.
 		\item $a \in_R \mathbb{Z}_l, Q = aP$.
 		\item $sk = a, pk = (p, E, P, Q)$.
 	\end{itemize}

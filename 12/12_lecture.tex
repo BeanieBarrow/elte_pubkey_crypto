@@ -82,7 +82,7 @@ Let $p$ be a prime, $E$ be an elliptic curve over $\mathbb{Z}_p$, $P \in E$ of p
 	\end{itemize}
 	\item Verify:
 	\begin{itemize}
-		\item Let $pk = Q, sign = (m, R, S)$
+		\item Let $pk = Q, sign = (m, R, s)$
 		\item $v_1 = sR + f(R) \cdot Q$
 		\item $v_2 = m \cdot P$
 		\item Verify: $v_1 \stackrel{?}{=} v_2$
@@ -191,7 +191,7 @@ Having pairing, one can perform cryptographic attacks.
 
 Goal: Design a PKE such that the public key is an identifier (ID).
 
-\begin{definition}[Boneh-Franklin IBE]
+\begin{definition}[Boneh-Franklin IBE]\leavevmode
 	\begin{itemize}
 		\item $A, B$ users
 		\item TA: Trusted Authority
@@ -211,31 +211,25 @@ Goal: Design a PKE such that the public key is an identifier (ID).
 				\item $s \in_R \mathbb{Z}_l, P_{pub} = sP$, where $s$ is secret, $P_{pub}$ is public.
 			\end{itemize}
 		\end{itemize}
+		\item Extraction:
+		\begin{itemize}
+			\item Let Bob's ID be $ID_B$.
+			\item TA computes: $Q_B = H(ID_B), D_B = sQ_B$.
+			\item Bob's $sk = D_B$
+		\end{itemize}
+		\item Encryption:
+		\begin{itemize}
+			\item Let $ID_B$ be the ID of Bob.
+			\item $A$ computes: $Q_B = H(ID_B), g_B = e(Q_B, P_{pub})$
+			\item $r \in_R \mathbb{Z}_l$, cipher text: $c = (rP \in E, m \cdot g_B^r \in \mathbb{Z}_l)$ on message $m$.
+		\end{itemize}
+		\item Decryption:
+		\begin{itemize}
+			\item $B$ is given $c = (U, v)$ having $D_B: h_B = e(D_B, U)$
+			\item $m = \frac{v}{h_B}$
+		\end{itemize}
 	\end{itemize}
 \end{definition}
-
-Extraction:
-
-\begin{itemize}
-	\item Let Bob's ID be $ID_B$.
-	\item TA computes: $Q_B = H(ID_B), D_B = sQ_B$.
-	\item Bob's $sk = D_B$
-\end{itemize}
-
-Encryption:
-
-\begin{itemize}
-	\item Let $ID_B$ be the ID of Bob.
-	\item $A$ computes: $Q_B = H(ID_B), g_B = e(Q_B, P_{pub})$
-	\item $r \in_R \mathbb{Z}_l$, cipher text: $c = (rP \in E, m \cdot g_B^r \in \mathbb{Z}_l)$ on message $m$.
-\end{itemize}
-
-Decryption:
-
-\begin{itemize}
-	\item $B$ is given $c = (U, v)$ having $D_B: h_B = e(D_B, U)$
-	\item $m = \frac{v}{h_B}$
-\end{itemize}
 
 Correctness: 
 

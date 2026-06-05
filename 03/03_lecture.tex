@@ -75,7 +75,7 @@
 	\end{enumerate}
 \end{definition}
 
-\section{Security of a Public Key Encrpytion scheme}
+\section{Security of a Public Key Encryption scheme}
 
 \begin{itemize}
 	\item Model: The adversary $A$ is a PPT algorithm and $A$ knows all the public parameters (the $\Gen, \Enc, \Dec$ algorithms and the $pk$ public key)
@@ -93,7 +93,7 @@
 	\begin{enumerate}
 		\item Run the key generation algorithm $\Gen(1^n)$, obtaining the $(pk, sk)$ pair.
 		\item $A$ is given $pk$, and outputs $m_0, m_1$ messages.
-		\item Choose a random bit $b \in_R {0,1}$ and $c \leftarrow Enc_{pk}(m_b)$.
+		\item Choose a random bit $b \in_R \{0,1\}$ and $c \leftarrow Enc_{pk}(m_b)$.
 		\item $A$ is given $c$, and outputs the guess $b'$.
 		\item If the guess $b' = b$, we say that $A$ has succeeded and $PubK^{cpa}_{A, \Pi}(n) = 1$, otherwise, $PubK^{cpa}_{A, \Pi}(n) = 0$
 	\end{enumerate}
@@ -155,7 +155,7 @@ Correctness: $\frac{c_2}{c_1^x} = \frac{m \cdot h^y}{(g^y)^x} = m \cdot \frac{g^
 	We define a fake encryption scheme $\Pi'$:
 	\begin{itemize}
 		\item Input: $m, pk = (p, q, g, h)$
-		\item Output: $c = ()g^y, m \cdot g^z)$, with $y, z \in_R \mathbb{Z}_q$
+		\item Output: $c = (g^y, m \cdot g^z)$, with $y, z \in_R \mathbb{Z}_q$
 		\item There is no $\Dec$ algorithm defined
 	\end{itemize}
 	
@@ -166,7 +166,7 @@ Correctness: $\frac{c_2}{c_1^x} = \frac{m \cdot h^y}{(g^y)^x} = m \cdot \frac{g^
 		\item The algorithm is as follows:
 		\begin{enumerate}
 			\item Under $pk$, run $A$ to obtain two messages: $m_0, m_1$
-			\item Choose a random bit $b \in_R {0,1}$
+			\item Choose a random bit $b \in_R \{0,1\}$
 			\item Calculate $c_1 = h_2, c_2 = m_b \cdot h_3$
 			\item Give $(c_1, c_2)$ to $A$, obtain a guess $b'$
 		\end{enumerate}
